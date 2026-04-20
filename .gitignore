@@ -1,0 +1,33 @@
+# Environment
+.env
+*.env
+
+# Cookies
+cookies.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+venv/
+env/
+.venv/
+
+# Logs
+*.log
+setup_log.txt
+
+# DB scripts (one-time use)
+migrate.py
+setup_db.py
+out.txt
+tmp.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

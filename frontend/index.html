@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SONIX Music </title>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo"><i class="fas fa-music"></i> SONIX</div>
+      <div class="menu-item" id="nav-trending" onclick="showSection('trending')"><i class="fas fa-fire"></i> Trending</div>
+      <div class="menu-item active" id="nav-library" onclick="showSection('library')"><i class="fas fa-compact-disc"></i> Library</div>
+      <div class="menu-item" id="nav-favourites" onclick="showSection('favourites')"><i class="fas fa-heart"></i> Favourites</div>
+      <div class="menu-item" id="nav-playlists" onclick="showSection('playlists')"><i class="fas fa-list"></i> Playlists</div>
+    </div>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div class="search-box">
+          <i class="fas fa-search search-icon"></i>
+          <input id="urlInput" class="url-input" placeholder="Search songs, artists..." autocomplete="off" />
+          <div id="searchDropdown"></div>
+        </div>
+        <div class="topbar-right"></div>
+      </div>
+
+      <div id="section-trending" style="display:none">
+        <div id="trendingGrid" class="library-table-wrap"></div>
+      </div>
+
+      <div id="section-artist" style="display:none">
+        <div id="artistGrid" class="library-table-wrap"></div>
+      </div>
+
+      <div id="section-favourites" style="display:none">
+        <div id="favouritesGrid" class="library-table-wrap"></div>
+      </div>
+
+      <div id="section-playlists" style="display:none">
+        <div id="playlistsGrid" class="library-table-wrap"></div>
+      </div>
+
+      <div id="section-playlist-detail" style="display:none">
+        <div id="playlistDetailGrid" class="library-table-wrap"></div>
+      </div>
+
+      <div id="section-library" style="display:block">
+        <div id="mainGrid" class="library-table-wrap"></div>
+      </div>
+    </div>
+
+    <div id="playCardOverlay" class="playcard-overlay" onclick="closePlayCard()">
+      <div class="playcard-content" onclick="event.stopPropagation()">
+        <div class="pc-top">
+          <div class="pc-cover">
+            <div class="pc-cover__item" id="modalCoverBg" style="background-image: url('')"></div>
+          </div>
+          <div class="pc-controls">
+            <button class="pc-btn" onclick="prevTrack()" title="Previous"><i class="fas fa-step-backward"></i></button>
+            <button class="pc-btn" onclick="nextTrack()" title="Next"><i class="fas fa-step-forward"></i></button>
+            <button class="pc-btn -xl" onclick="togglePlay()" title="Play/Pause"><i id="modalPlayIcon" class="fas fa-play"></i></button>
+          </div>
+        </div>
+        <div class="pc-progress">
+          <div class="pc-progress__top">
+            <div class="pc-album">
+              <div class="pc-album__name" id="modalTitle">Song</div>
+              <div class="pc-album__track" id="modalArtist">Artist</div>
+            </div>
+            <div class="pc-duration" id="modalDuration">0:00</div>
+          </div>
+          <div class="pc-bar-wrap" onclick="seek(event)">
+            <div class="pc-bar">
+              <div id="modalFill" class="pc-bar__fill"></div>
+            </div>
+          </div>
+          <div class="pc-time" id="modalCurrent">0:00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="player">
+      <div class="p-info" onclick="openPlayCard()" title="Show Player">
+        <div class="p-img" id="pImg"></div>
+        <div class="p-text">
+          <b id="nowPlaying">No track</b><small id="nowArtist">—</small>
+        </div>
+      </div>
+      <div class="p-controls">
+        <div class="p-buttons">
+          <button class="p-button" onclick="prevTrack()"><i class="fas fa-step-backward"></i></button>
+          <button class="play-main" onclick="togglePlay()"><i id="playIcon" class="fas fa-play"></i></button>
+          <button class="p-button" onclick="nextTrack()"><i class="fas fa-step-forward"></i></button>
+        </div>
+        <div class="p-progress">
+          <span id="currentTime">0:00</span>
+          <div class="p-track-wrap" onclick="seek(event)">
+            <div class="p-track"><div id="fill" class="p-fill"></div></div>
+          </div>
+          <span id="durationTime">0:00</span>
+        </div>
+      </div>
+      <div class="volume-control" style="justify-content: flex-end;">
+        <i class="fas fa-volume-up" id="volIcon" onclick="toggleMute()" style="cursor:pointer"></i>
+        <input type="range" min="0" max="1" step="0.01" value="1" id="volSlider" oninput="setVolume(this.value)" title="Volume" />
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <div id="globalMenu" class="three-dot-menu"></div>
+    <audio id="audio"></audio>
+    <script src="app.js"></script>
+  </body>
+</html>
