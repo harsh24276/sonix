@@ -19,7 +19,47 @@ function showToast(msg, isError = false) {
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
+function saveName() {
+  const input = document.getElementById('nameInput');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  localStorage.setItem('sonix_user_name', name);
+  document.getElementById('nameModal').style.display = 'none';
+  showGreeting(name);
+}
+
+function showGreeting(name) {
+  const el = document.getElementById('topbarGreeting');
+  el.innerHTML = `<div class="greeting-text" onclick="editName()" title="Edit name">Hi, <span>${name}</span><i class="fas fa-pen greeting-edit"></i></div>`;
+}
+
+function editName() {
+  const modal = document.getElementById('nameModal');
+  const input = document.getElementById('nameInput');
+  input.value = localStorage.getItem('sonix_user_name') || '';
+  modal.style.display = 'flex';
+  setTimeout(() => input.focus(), 100);
+}
+
+function checkName() {
+  const name = localStorage.getItem('sonix_user_name');
+  if (name) {
+    document.getElementById('nameModal').style.display = 'none';
+    showGreeting(name);
+  } else {
+    document.getElementById('nameModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('nameInput').focus(), 300);
+  }
+}
+
+// allow Enter key to submit
+document.getElementById('nameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveName();
+});
+
+
 async function init() {
+  checkName();
   showSection("library");
   const cached = localStorage.getItem("library_cache");
   if (!cached) renderSkeleton();
@@ -749,6 +789,7 @@ searchInput.oninput = () => {
 
 async function deleteSong(id, event) {
   event.stopPropagation();
+  closeAllMenus();
   if (!confirm("🗑️ Delete this song?")) return;
   try {
     const res = await fetch(`${API}/delete/${id}`, { method: "DELETE" });

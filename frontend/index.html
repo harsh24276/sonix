@@ -19,12 +19,22 @@
 
     <div class="main-content">
       <div class="topbar">
+        <div class="topbar-greeting" id="topbarGreeting"></div>
         <div class="search-box">
           <i class="fas fa-search search-icon"></i>
           <input id="urlInput" class="url-input" placeholder="Search songs, artists..." autocomplete="off" />
           <div id="searchDropdown"></div>
         </div>
-        <div class="topbar-right"></div>
+      </div>
+
+      <!-- Name entry modal -->
+      <div id="nameModal" class="name-modal-overlay">
+        <div class="name-modal">
+          <h2 class="name-modal__title">Welcome!</h2>
+          <p class="name-modal__sub">What should we call you?</p>
+          <input id="nameInput" class="name-modal__input" type="text" placeholder="Write your name here..." maxlength="30" />
+          <button class="name-modal__btn" onclick="saveName()">Let's Go <i class="fas fa-arrow-right"></i></button>
+        </div>
       </div>
 
       <div id="section-trending" style="display:none">
