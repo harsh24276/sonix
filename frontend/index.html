@@ -58,10 +58,13 @@
           <div class="pc-cover">
             <div class="pc-cover__item" id="modalCoverBg" style="background-image: url('')"></div>
           </div>
-          <div class="pc-controls">
-            <button class="pc-btn" onclick="prevTrack()" title="Previous"><i class="fas fa-step-backward"></i></button>
-            <button class="pc-btn" onclick="nextTrack()" title="Next"><i class="fas fa-step-forward"></i></button>
-            <button class="pc-btn -xl" onclick="togglePlay()" title="Play/Pause"><i id="modalPlayIcon" class="fas fa-play"></i></button>
+          <div class="pc-side">
+            <button class="pc-extra-btn" id="btnShuffle" onclick="toggleShuffle()" title="Shuffle"><i class="fas fa-random"></i></button>
+            <button class="pc-extra-btn" id="btnLoop" onclick="toggleLoop()" title="Loop"><i class="fas fa-redo"></i></button>
+            <div class="pc-vol">
+              <i class="fas fa-volume-up" id="pcVolIcon" onclick="togglePcMute()" style="cursor:pointer"></i>
+              <input type="range" min="0" max="1" step="0.01" value="1" id="pcVolSlider" oninput="setPcVolume(this.value)" />
+            </div>
           </div>
         </div>
         <div class="pc-progress">
@@ -78,6 +81,11 @@
             </div>
           </div>
           <div class="pc-time" id="modalCurrent">0:00</div>
+          <div class="pc-controls">
+            <button class="pc-btn" onclick="prevTrack()" title="Previous"><i class="fas fa-step-backward"></i></button>
+            <button class="pc-btn -xl" onclick="togglePlay()" title="Play/Pause"><i id="modalPlayIcon" class="fas fa-play"></i></button>
+            <button class="pc-btn" onclick="nextTrack()" title="Next"><i class="fas fa-step-forward"></i></button>
+          </div>
         </div>
       </div>
     </div>

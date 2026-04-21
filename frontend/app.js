@@ -611,7 +611,66 @@ function toggleMute() {
   }
 }
 
-audio.onended = () => nextTrack();
+// ── Loop / Shuffle ───────────────────────────────────────
+// loopMode: 0 = off, 1 = loop one, 2 = loop all
+let loopMode = 0;
+let shuffleOn = false;
+
+function toggleLoop() {
+  loopMode = (loopMode + 1) % 3;
+  const btn = document.getElementById('btnLoop');
+  const icons = ['fa-redo','fa-redo','fa-redo'];
+  btn.classList.toggle('active', loopMode > 0);
+  btn.title = ['Loop Off','Loop One','Loop All'][loopMode];
+  btn.querySelector('i').className = loopMode === 1 ? 'fas fa-redo' : 'fas fa-redo';
+  // show badge for loop-one
+  btn.innerHTML = loopMode === 1
+    ? '<i class="fas fa-redo"></i><span class="loop-badge">1</span>'
+    : '<i class="fas fa-redo"></i>';
+  showToast(['Loop Off','Loop One 🔁','Loop All 🔁'][loopMode]);
+}
+
+function toggleShuffle() {
+  shuffleOn = !shuffleOn;
+  document.getElementById('btnShuffle').classList.toggle('active', shuffleOn);
+  showToast(shuffleOn ? 'Shuffle On' : 'Shuffle Off');
+}
+
+function setPcVolume(val) {
+  audio.volume = val;
+  audio.muted = false;
+  const icon = val == 0 ? 'fa-volume-mute' : val < 0.5 ? 'fa-volume-down' : 'fa-volume-up';
+  document.getElementById('pcVolIcon').className = `fas ${icon}`;
+  document.getElementById('volIcon').className = `fas ${icon}`;
+  document.getElementById('volSlider').value = val;
+}
+
+function togglePcMute() {
+  audio.muted = !audio.muted;
+  const slider = document.getElementById('pcVolSlider');
+  if (audio.muted) {
+    slider.value = 0;
+    document.getElementById('pcVolIcon').className = 'fas fa-volume-mute';
+  } else {
+    slider.value = audio.volume;
+    document.getElementById('pcVolIcon').className = audio.volume < 0.5 ? 'fas fa-volume-down' : 'fas fa-volume-up';
+  }
+}
+
+audio.onended = () => {
+  if (loopMode === 1) {
+    audio.currentTime = 0;
+    audio.play();
+  } else if (shuffleOn) {
+    const idx = Math.floor(Math.random() * library.length);
+    const t = library[idx];
+    playTrack(t.id, t.name, t.artist, t.thumbnail);
+  } else if (loopMode === 2) {
+    nextTrack();
+  } else {
+    nextTrack();
+  }
+};
 audio.onplay = () => syncPlayIcons();
 audio.onpause = () => syncPlayIcons();
 
