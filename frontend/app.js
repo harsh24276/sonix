@@ -531,6 +531,10 @@ function prevTrack() {
 function openPlayCard() {
   if (!currentTrackId) { showToast("⚠️ No track playing", true); return; }
   document.getElementById("playCardOverlay").style.display = "flex";
+  const vol = audio.muted ? 0 : audio.volume;
+  _syncVolFill(vol);
+  const pcSlider = document.getElementById('pcVolSlider');
+  if (pcSlider) pcSlider.value = Math.round(vol * 100);
 }
 
 function closePlayCard() {
@@ -592,22 +596,51 @@ function seek(e) {
   audio.currentTime = ratio * audio.duration;
 }
 
+function _updateVolIcon(id, val) {
+  const icon = val == 0 ? 'fa-volume-mute' : val < 0.5 ? 'fa-volume-down' : 'fa-volume-up';
+  const el = document.getElementById(id);
+  if (!el) return;
+  // pcVolIcon is a <button> containing <i>, volIcon is a plain <i>
+  const iconEl = el.tagName === 'BUTTON' ? el.querySelector('i') : el;
+  if (iconEl) iconEl.className = `fas ${icon}`;
+  el.classList.toggle('muted', val == 0);
+}
+
+function _syncVolFill(val) {
+  const slider = document.getElementById('pcVolSlider');
+  if (!slider) return;
+  const pct = Math.round(val * 100);
+  slider.style.background = `linear-gradient(to right, #ff8928 0%, #ff414e ${pct}%, rgba(255,255,255,0.15) ${pct}%, rgba(255,255,255,0.15) 100%)`;
+}
+
 function setVolume(val) {
-  audio.volume = val;
+  audio.volume = parseFloat(val);
   audio.muted = false;
-  document.getElementById("volIcon").className = val == 0 ? "fas fa-volume-mute" : val < 0.5 ? "fas fa-volume-down" : "fas fa-volume-up";
+  _updateVolIcon('volIcon', val);
+  _updateVolIcon('pcVolIcon', val);
+  _syncVolFill(val);
+  const pcSlider = document.getElementById('pcVolSlider');
+  if (pcSlider) pcSlider.value = Math.round(val * 100);
 }
 
 function toggleMute() {
-  audio.muted = !audio.muted;
-  const slider = document.getElementById("volSlider");
-  if (audio.muted) {
-    _prevVol = slider.value;
-    slider.value = 0;
-    document.getElementById("volIcon").className = "fas fa-volume-mute";
+  const slider = document.getElementById('volSlider');
+  const pcSlider = document.getElementById('pcVolSlider');
+  if (!audio.muted) {
+    _prevVol = audio.volume;
+    audio.muted = true;
+    if (slider) slider.value = 0;
+    if (pcSlider) pcSlider.value = 0;
+    _updateVolIcon('volIcon', 0);
+    _updateVolIcon('pcVolIcon', 0);
+    _syncVolFill(0);
   } else {
-    slider.value = _prevVol;
-    document.getElementById("volIcon").className = _prevVol < 0.5 ? "fas fa-volume-down" : "fas fa-volume-up";
+    audio.muted = false;
+    if (slider) slider.value = _prevVol;
+    if (pcSlider) pcSlider.value = Math.round(_prevVol * 100);
+    _updateVolIcon('volIcon', _prevVol);
+    _updateVolIcon('pcVolIcon', _prevVol);
+    _syncVolFill(_prevVol);
   }
 }
 
@@ -618,16 +651,19 @@ let shuffleOn = false;
 
 function toggleLoop() {
   loopMode = (loopMode + 1) % 3;
+  const labels = ['Loop Off', 'Loop One', 'Loop All'];
+  const toasts = ['Loop Off', 'Loop One 🔂', 'Loop All 🔁'];
   const btn = document.getElementById('btnLoop');
-  const icons = ['fa-redo','fa-redo','fa-redo'];
-  btn.classList.toggle('active', loopMode > 0);
-  btn.title = ['Loop Off','Loop One','Loop All'][loopMode];
-  btn.querySelector('i').className = loopMode === 1 ? 'fas fa-redo' : 'fas fa-redo';
-  // show badge for loop-one
-  btn.innerHTML = loopMode === 1
-    ? '<i class="fas fa-redo"></i><span class="loop-badge">1</span>'
-    : '<i class="fas fa-redo"></i>';
-  showToast(['Loop Off','Loop One 🔁','Loop All 🔁'][loopMode]);
+  if (btn) {
+    btn.classList.toggle('active', loopMode > 0);
+    btn.title = labels[loopMode];
+    btn.innerHTML = loopMode === 1
+      ? '<i class="fas fa-redo"></i><span class="loop-badge">1</span>'
+      : loopMode === 2
+        ? '<i class="fas fa-redo"></i><span class="loop-badge">∞</span>'
+        : '<i class="fas fa-redo"></i>';
+  }
+  showToast(toasts[loopMode]);
 }
 
 function toggleShuffle() {
@@ -637,24 +673,19 @@ function toggleShuffle() {
 }
 
 function setPcVolume(val) {
-  audio.volume = val;
+  // val is 0-100 from the slider
+  const v = parseFloat(val) / 100;
+  audio.volume = v;
   audio.muted = false;
-  const icon = val == 0 ? 'fa-volume-mute' : val < 0.5 ? 'fa-volume-down' : 'fa-volume-up';
-  document.getElementById('pcVolIcon').className = `fas ${icon}`;
-  document.getElementById('volIcon').className = `fas ${icon}`;
-  document.getElementById('volSlider').value = val;
+  _updateVolIcon('pcVolIcon', v);
+  _updateVolIcon('volIcon', v);
+  const slider = document.getElementById('volSlider');
+  if (slider) slider.value = v;
+  _syncVolFill(v);
 }
 
 function togglePcMute() {
-  audio.muted = !audio.muted;
-  const slider = document.getElementById('pcVolSlider');
-  if (audio.muted) {
-    slider.value = 0;
-    document.getElementById('pcVolIcon').className = 'fas fa-volume-mute';
-  } else {
-    slider.value = audio.volume;
-    document.getElementById('pcVolIcon').className = audio.volume < 0.5 ? 'fas fa-volume-down' : 'fas fa-volume-up';
-  }
+  toggleMute();
 }
 
 audio.onended = () => {
@@ -741,5 +772,8 @@ document.addEventListener("click", (e) => {
   }
   if (!e.target.closest(".three-dot-wrap")) closeAllMenus();
 });
+
+// set initial volume fill
+_syncVolFill(1);
 
 init();
