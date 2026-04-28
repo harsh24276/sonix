@@ -17,7 +17,7 @@ COOKIES_FILE = os.path.join(os.path.dirname(__file__), "cookies.txt")
 YDL_OPTS = {
     "quiet": True, "no_warnings": True, "default_search": "ytsearch1",
     "noplaylist": True, "socket_timeout": 15,
-    "format": "bestaudio/best",
+    "format": "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best",
     "extractor_args": {
         "youtube": {
             "player_client": ["android_vr"],
@@ -282,21 +282,62 @@ def _get_stream_url(vid_id):
 
 def _proxy_stream(stream_url):
     range_header = request.headers.get("Range")
-    headers = {"User-Agent": "Mozilla/5.0", "Accept": "*/*"}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "*/*",
+        "Accept-Encoding": "identity",
+        "Connection": "keep-alive",
+    }
     if range_header:
         headers["Range"] = range_header
-    r = requests.get(stream_url, headers=headers, stream=True, timeout=30)
+    r = requests.get(stream_url, headers=headers, stream=True, timeout=60)
     status = r.status_code
     resp_headers = {
         "Content-Type": r.headers.get("Content-Type", "audio/webm"),
         "Accept-Ranges": "bytes",
         "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Range",
+        "Access-Control-Expose-Headers": "Content-Length, Content-Range, Content-Type",
     }
     if "Content-Range" in r.headers:
         resp_headers["Content-Range"] = r.headers["Content-Range"]
     if "Content-Length" in r.headers:
         resp_headers["Content-Length"] = r.headers["Content-Length"]
-    return Response(r.iter_content(chunk_size=8192), status=status, headers=resp_headers)
+    return Response(
+        r.iter_content(chunk_size=65536),
+        status=status,
+        headers=resp_headers,
+        direct_passthrough=True
+    )
+
+@app.route("/stream_direct/<vid_id>")
+def stream_direct(vid_id):
+    try:
+        stream_url = _get_stream_url(vid_id)
+        if not stream_url:
+            return jsonify({"error": "No stream URL"}), 500
+        return _proxy_stream(stream_url)
+    except Exception as e:
+        print(f"Stream error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/stream/<id>")
+def stream(id):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM library WHERE id=%s", (id,))
+            track = cur.fetchone()
+    if not track:
+        return jsonify({"error": "Track not found"}), 404
+    try:
+        vid_id = track.get("video_id")
+        stream_url = _get_stream_url(vid_id)
+        if not stream_url:
+            return jsonify({"error": "Could not extract stream URL"}), 500
+        return _proxy_stream(stream_url)
+    except Exception as e:
+        print(f"Stream error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/stream_direct/<vid_id>")
 def stream_direct(vid_id):
