@@ -2,8 +2,8 @@
 .env
 *.env
 
-# Cookies
-cookies.txt
+# Cookies - uncomment to ignore locally
+# cookies.txt
 
 # Python
 __pycache__/
