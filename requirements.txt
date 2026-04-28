@@ -5,3 +5,4 @@ ytmusicapi
 psycopg2-binary
 python-dotenv
 gunicorn
+requests

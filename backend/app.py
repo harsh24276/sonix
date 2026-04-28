@@ -1,5 +1,5 @@
-import os, re, threading, time
-from flask import Flask, request, jsonify, redirect
+import os, re, threading, time, requests
+from flask import Flask, request, jsonify, redirect, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
 import yt_dlp
@@ -269,19 +269,42 @@ def artist_songs():
         return jsonify([])
 
 # ── Streaming ─────────────────────────────────────────────
-@app.route("/stream_direct/<vid_id>")
-def stream_direct(vid_id):
+def _get_stream_url(vid_id):
     cached = stream_cache.get(vid_id)
     if cached and time.time() < cached[1]:
-        return redirect(cached[0])
+        return cached[0]
+    info = extract_info_safe(f"https://www.youtube.com/watch?v={vid_id}")
+    video = info["entries"][0] if "entries" in info else info
+    stream_url = video.get("url")
+    if stream_url:
+        stream_cache[vid_id] = (stream_url, time.time() + CACHE_TTL)
+    return stream_url
+
+def _proxy_stream(stream_url):
+    range_header = request.headers.get("Range")
+    headers = {"User-Agent": "Mozilla/5.0", "Accept": "*/*"}
+    if range_header:
+        headers["Range"] = range_header
+    r = requests.get(stream_url, headers=headers, stream=True, timeout=30)
+    status = r.status_code
+    resp_headers = {
+        "Content-Type": r.headers.get("Content-Type", "audio/webm"),
+        "Accept-Ranges": "bytes",
+        "Access-Control-Allow-Origin": "*",
+    }
+    if "Content-Range" in r.headers:
+        resp_headers["Content-Range"] = r.headers["Content-Range"]
+    if "Content-Length" in r.headers:
+        resp_headers["Content-Length"] = r.headers["Content-Length"]
+    return Response(r.iter_content(chunk_size=8192), status=status, headers=resp_headers)
+
+@app.route("/stream_direct/<vid_id>")
+def stream_direct(vid_id):
     try:
-        info = extract_info_safe(f"https://www.youtube.com/watch?v={vid_id}")
-        video = info["entries"][0] if "entries" in info else info
-        stream_url = video.get("url")
-        if stream_url:
-            stream_cache[vid_id] = (stream_url, time.time() + CACHE_TTL)
-            return redirect(stream_url)
-        return jsonify({"error": "No stream URL"}), 500
+        stream_url = _get_stream_url(vid_id)
+        if not stream_url:
+            return jsonify({"error": "No stream URL"}), 500
+        return _proxy_stream(stream_url)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -293,19 +316,12 @@ def stream(id):
             track = cur.fetchone()
     if not track:
         return jsonify({"error": "Track not found"}), 404
-    cached = stream_cache.get(id)
-    if cached and time.time() < cached[1]:
-        return redirect(cached[0])
     try:
         vid_id = track.get("video_id")
-        url = f"https://www.youtube.com/watch?v={vid_id}" if vid_id else f"{track['name']} {track['artist']} official audio"
-        info = extract_info_safe(url)
-        video = info['entries'][0] if 'entries' in info else info
-        stream_url = video.get("url")
-        if stream_url:
-            stream_cache[id] = (stream_url, time.time() + CACHE_TTL)
-            return redirect(stream_url)
-        return jsonify({"error": "Could not extract stream URL"}), 500
+        stream_url = _get_stream_url(vid_id)
+        if not stream_url:
+            return jsonify({"error": "Could not extract stream URL"}), 500
+        return _proxy_stream(stream_url)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
