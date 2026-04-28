@@ -1,4 +1,4 @@
-const API = "web-production-99c599.up.railway.app";
+const API = "https://web-production-99c599.up.railway.app";
 
 let library = [];
 let currentTrackId = null;

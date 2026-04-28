@@ -41,7 +41,7 @@ def clean_title(title):
 
 ytmusic = YTMusic()
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://harsh24276.github.io", "http://localhost:5500", "http://127.0.0.1:5500", "null", "*"])
 threading.Thread(target=init_db, daemon=True).start()
 
 # ── Library ──────────────────────────────────────────────
