@@ -10,7 +10,6 @@ class get_conn:
         self.conn = psycopg2.connect(
             os.getenv("DATABASE_URL"),
             cursor_factory=RealDictCursor,
-            sslmode="require",
             connect_timeout=10
         )
         return self.conn
