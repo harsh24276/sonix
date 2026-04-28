@@ -339,32 +339,5 @@ def stream(id):
         print(f"Stream error: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/stream_direct/<vid_id>")
-def stream_direct(vid_id):
-    try:
-        stream_url = _get_stream_url(vid_id)
-        if not stream_url:
-            return jsonify({"error": "No stream URL"}), 500
-        return _proxy_stream(stream_url)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/stream/<id>")
-def stream(id):
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT * FROM library WHERE id=%s", (id,))
-            track = cur.fetchone()
-    if not track:
-        return jsonify({"error": "Track not found"}), 404
-    try:
-        vid_id = track.get("video_id")
-        stream_url = _get_stream_url(vid_id)
-        if not stream_url:
-            return jsonify({"error": "Could not extract stream URL"}), 500
-        return _proxy_stream(stream_url)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 if __name__ == "__main__":
     app.run(port=PORT, debug=True, use_reloader=False)
