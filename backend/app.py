@@ -20,9 +20,12 @@ YDL_OPTS = {
     "format": "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best",
     "extractor_args": {
         "youtube": {
-            "player_client": ["android_vr"],
+            "player_client": ["android_vr", "android", "ios"],
             "skip": ["hls", "dash"],
         }
+    },
+    "http_headers": {
+        "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
     },
 }
 
