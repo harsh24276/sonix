@@ -17,7 +17,7 @@ COOKIES_FILE = os.path.join(os.path.dirname(__file__), "cookies.txt")
 YDL_OPTS = {
     "quiet": True, "no_warnings": True, "default_search": "ytsearch1",
     "noplaylist": True, "socket_timeout": 30,
-    "format": "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best",
+    "format": "bestaudio/best",
     "extractor_args": {
         "youtube": {
             "player_client": ["ios", "android_vr"],
