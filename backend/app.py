@@ -20,11 +20,8 @@ YDL_OPTS = {
     "format": "bestaudio/best",
     "extractor_args": {
         "youtube": {
-            "player_client": ["ios", "android_vr"],
+            "player_client": ["android_vr"],
         }
-    },
-    "http_headers": {
-        "User-Agent": "com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X)",
     },
 }
 
