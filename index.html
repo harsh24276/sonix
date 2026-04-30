@@ -63,20 +63,21 @@
     </div>
 
     <div id="playCardOverlay" class="playcard-overlay" onclick="closePlayCard()">
-      <div class="playcard-content" onclick="event.stopPropagation()">
 
-        <!-- Liquid background animation -->
-        <svg class="pc-liquid" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <filter id="liquidFilter">
-              <feTurbulence id="turbwave" type="fractalNoise" baseFrequency="0.08" numOctaves="3" seed="2" result="noise"/>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="18" xChannelSelector="R" yChannelSelector="G"/>
-            </filter>
-          </defs>
-          <ellipse class="liq liq1" cx="60%" cy="20%" rx="140" ry="100" filter="url(#liquidFilter)"/>
-          <ellipse class="liq liq2" cx="20%" cy="75%" rx="110" ry="80" filter="url(#liquidFilter)"/>
-          <ellipse class="liq liq3" cx="80%" cy="65%" rx="90" ry="70" filter="url(#liquidFilter)"/>
-        </svg>
+      <svg class="pc-liquid" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="liquidFilter">
+            <feTurbulence id="turbwave" type="fractalNoise" baseFrequency="0.06" numOctaves="3" seed="5" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="25" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+        </defs>
+        <ellipse class="liq liq1" cx="12%" cy="25%" rx="220" ry="180" filter="url(#liquidFilter)"/>
+        <ellipse class="liq liq2" cx="88%" cy="18%" rx="190" ry="160" filter="url(#liquidFilter)"/>
+        <ellipse class="liq liq3" cx="8%"  cy="82%" rx="200" ry="170" filter="url(#liquidFilter)"/>
+        <ellipse class="liq liq4" cx="90%" cy="80%" rx="180" ry="150" filter="url(#liquidFilter)"/>
+      </svg>
+
+      <div class="playcard-content" onclick="event.stopPropagation()">
         <div class="pc-top">
           <div class="pc-cover">
             <div class="pc-cover__item" id="modalCoverBg" style="background-image: url('')"></div>

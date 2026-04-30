@@ -575,11 +575,6 @@ function openPlayCard() {
   _syncVolFill(vol);
   const pcSlider = document.getElementById('pcVolSlider');
   if (pcSlider) pcSlider.value = Math.round(vol * 100);
-  // start liquid animation
-  if (window.gsap) {
-    gsap.set("#turbwave", { attr: { baseFrequency: 0.08 } });
-    gsap.to("#turbwave", { duration: 8, attr: { baseFrequency: 0.01 }, ease: "power1.inOut", repeat: -1, yoyo: true });
-  }
 }
 
 function closePlayCard() {
