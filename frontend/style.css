@@ -1345,3 +1345,89 @@ body {
 .pc-cover { isolation: isolate; filter: none; }
 .pc-cover__item { isolation: isolate; filter: none; }
 .pc-cover__item::after { filter: none; }
+
+/* ============ GLOWING ORBS ============ */
+.pc-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+}
+.o1 {
+  width: 420px; height: 420px;
+  background: radial-gradient(circle, #ff8928, transparent 70%);
+  top: -10%; left: -10%;
+  animation: orbFloat1 10s ease-in-out infinite alternate;
+}
+.o2 {
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, #a855f7, transparent 70%);
+  top: -5%; right: -10%;
+  animation: orbFloat2 13s ease-in-out infinite alternate;
+}
+.o3 {
+  width: 360px; height: 360px;
+  background: radial-gradient(circle, #06b6d4, transparent 70%);
+  bottom: -10%; left: -5%;
+  animation: orbFloat3 11s ease-in-out infinite alternate;
+}
+.o4 {
+  width: 340px; height: 340px;
+  background: radial-gradient(circle, #ff414e, transparent 70%);
+  bottom: -8%; right: -8%;
+  animation: orbFloat4 14s ease-in-out infinite alternate;
+}
+
+@keyframes orbFloat1 {
+  0%   { transform: translate(0, 0)      scale(1);    }
+  100% { transform: translate(40px, 50px) scale(1.15); }
+}
+@keyframes orbFloat2 {
+  0%   { transform: translate(0, 0)       scale(1);    }
+  100% { transform: translate(-45px, 40px) scale(1.1);  }
+}
+@keyframes orbFloat3 {
+  0%   { transform: translate(0, 0)       scale(1);    }
+  100% { transform: translate(35px, -45px) scale(1.12); }
+}
+@keyframes orbFloat4 {
+  0%   { transform: translate(0, 0)        scale(1);    }
+  100% { transform: translate(-38px, -35px) scale(1.08); }
+}
+
+/* ============ PC SEEK ROW + FAV BTN ============ */
+.pc-seek-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.pc-fav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.35);
+  font-size: 1.3rem;
+  transition: color 0.25s ease, transform 0.25s ease;
+  padding: 4px 8px;
+  position: relative;
+}
+.pc-fav-btn:hover { color: #ff414e; transform: scale(1.2); }
+.pc-fav-btn.active { color: #ff414e; }
+
+/* pop animation when toggled */
+@keyframes favPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.5); }
+  70%  { transform: scale(0.88); }
+  100% { transform: scale(1); }
+}
+.pc-fav-btn.pop { animation: favPop 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }

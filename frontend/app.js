@@ -575,6 +575,7 @@ function openPlayCard() {
   _syncVolFill(vol);
   const pcSlider = document.getElementById('pcVolSlider');
   if (pcSlider) pcSlider.value = Math.round(vol * 100);
+  syncPcFavBtn();
 }
 
 function closePlayCard() {
@@ -724,9 +725,27 @@ function setPcVolume(val) {
   _syncVolFill(v);
 }
 
-function togglePcMute() {
-  toggleMute();
+function togglePcFavourite() {
+  const btn = document.getElementById('pcFavBtn');
+  if (!currentTrackId) return;
+  const track = library.find(t => t.id === currentTrackId);
+  if (!track) return;
+  // reuse toggleFavourite logic
+  const fakeEvent = { stopPropagation: () => {} };
+  toggleFavourite(currentTrackId, fakeEvent).then(() => {
+    btn.classList.toggle('active', _favIds.has(currentTrackId));
+    btn.classList.remove('pop');
+    void btn.offsetWidth; // reflow to restart animation
+    btn.classList.add('pop');
+  });
 }
+
+function syncPcFavBtn() {
+  const btn = document.getElementById('pcFavBtn');
+  if (btn) btn.classList.toggle('active', _favIds.has(currentTrackId));
+}
+
+
 
 audio.onended = () => {
   if (loopMode === 1) {
