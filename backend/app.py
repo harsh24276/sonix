@@ -16,11 +16,12 @@ COOKIES_FILE = os.path.join(os.path.dirname(__file__), "cookies.txt")
 
 YDL_OPTS = {
     "quiet": True, "no_warnings": True, "default_search": "ytsearch1",
-    "noplaylist": True, "socket_timeout": 30,
+    "noplaylist": True, "socket_timeout": 15,
     "format": "bestaudio/best",
     "extractor_args": {
         "youtube": {
             "player_client": ["android_vr"],
+            "skip": ["hls", "dash"],
         }
     },
 }
@@ -268,56 +269,20 @@ def artist_songs():
         return jsonify([])
 
 # ── Streaming ─────────────────────────────────────────────
-def _get_stream_url(vid_id):
-    cached = stream_cache.get(vid_id)
-    if cached and time.time() < cached[1]:
-        return cached[0]
-    info = extract_info_safe(f"https://www.youtube.com/watch?v={vid_id}")
-    video = info["entries"][0] if "entries" in info else info
-    stream_url = video.get("url")
-    if stream_url:
-        stream_cache[vid_id] = (stream_url, time.time() + CACHE_TTL)
-    return stream_url
-
-def _proxy_stream(stream_url):
-    range_header = request.headers.get("Range")
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "*/*",
-        "Accept-Encoding": "identity",
-        "Connection": "keep-alive",
-    }
-    if range_header:
-        headers["Range"] = range_header
-    r = requests.get(stream_url, headers=headers, stream=True, timeout=60)
-    status = r.status_code
-    resp_headers = {
-        "Content-Type": r.headers.get("Content-Type", "audio/webm"),
-        "Accept-Ranges": "bytes",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Range",
-        "Access-Control-Expose-Headers": "Content-Length, Content-Range, Content-Type",
-    }
-    if "Content-Range" in r.headers:
-        resp_headers["Content-Range"] = r.headers["Content-Range"]
-    if "Content-Length" in r.headers:
-        resp_headers["Content-Length"] = r.headers["Content-Length"]
-    return Response(
-        r.iter_content(chunk_size=65536),
-        status=status,
-        headers=resp_headers,
-        direct_passthrough=True
-    )
-
 @app.route("/stream_direct/<vid_id>")
 def stream_direct(vid_id):
+    cached = stream_cache.get(vid_id)
+    if cached and time.time() < cached[1]:
+        return redirect(cached[0])
     try:
-        stream_url = _get_stream_url(vid_id)
-        if not stream_url:
-            return jsonify({"error": "No stream URL"}), 500
-        return _proxy_stream(stream_url)
+        info = extract_info_safe(f"https://www.youtube.com/watch?v={vid_id}")
+        video = info["entries"][0] if "entries" in info else info
+        stream_url = video.get("url")
+        if stream_url:
+            stream_cache[vid_id] = (stream_url, time.time() + CACHE_TTL)
+            return redirect(stream_url)
+        return jsonify({"error": "No stream URL"}), 500
     except Exception as e:
-        print(f"Stream error: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/stream/<id>")
@@ -328,14 +293,20 @@ def stream(id):
             track = cur.fetchone()
     if not track:
         return jsonify({"error": "Track not found"}), 404
+    cached = stream_cache.get(id)
+    if cached and time.time() < cached[1]:
+        return redirect(cached[0])
     try:
         vid_id = track.get("video_id")
-        stream_url = _get_stream_url(vid_id)
-        if not stream_url:
-            return jsonify({"error": "Could not extract stream URL"}), 500
-        return _proxy_stream(stream_url)
+        url = f"https://www.youtube.com/watch?v={vid_id}" if vid_id else f"{track['name']} {track['artist']} official audio"
+        info = extract_info_safe(url)
+        video = info['entries'][0] if 'entries' in info else info
+        stream_url = video.get("url")
+        if stream_url:
+            stream_cache[id] = (stream_url, time.time() + CACHE_TTL)
+            return redirect(stream_url)
+        return jsonify({"error": "Could not extract stream URL"}), 500
     except Exception as e:
-        print(f"Stream error: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
