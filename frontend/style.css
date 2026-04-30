@@ -917,7 +917,7 @@ body {
   padding-top: 40px;
   cursor: default;
   animation: slideUp 0.35s ease;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 32px 80px rgba(0,0,0,0.6);
   position: relative;
 }
@@ -1340,3 +1340,8 @@ body {
   0%   { transform: translate(0,0)        scale(1);    }
   100% { transform: translate(-32px,-28px) scale(1.18);}
 }
+
+/* Fix thumbnail distortion from liquid SVG filter */
+.pc-cover { isolation: isolate; filter: none; }
+.pc-cover__item { isolation: isolate; filter: none; }
+.pc-cover__item::after { filter: none; }
