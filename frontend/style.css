@@ -1431,3 +1431,7 @@ body {
   100% { transform: scale(1); }
 }
 .pc-fav-btn.pop { animation: favPop 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }
+
+/* fav btn aligned right in progress top */
+.pc-progress__top { align-items: center; }
+.pc-fav-btn { margin-left: auto; align-self: center; }
