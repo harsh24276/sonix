@@ -1,4 +1,4 @@
-const API = "http://localhost:7842";
+const API = "https://sonix-m25r.onrender.com";
 
 let library = [];
 let currentTrackId = null;
