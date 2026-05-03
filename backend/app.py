@@ -16,13 +16,15 @@ COOKIES_FILE = os.path.join(os.path.dirname(__file__), "cookies.txt")
 
 YDL_OPTS = {
     "quiet": True, "no_warnings": True, "default_search": "ytsearch1",
-    "noplaylist": True, "socket_timeout": 15,
+    "noplaylist": True, "socket_timeout": 30,
     "format": "bestaudio/best",
     "extractor_args": {
         "youtube": {
-            "player_client": ["android_vr"],
-            "skip": ["hls", "dash"],
+            "player_client": ["ios", "web"],
         }
+    },
+    "http_headers": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     },
 }
 
@@ -307,6 +309,7 @@ def stream(id):
             return redirect(stream_url)
         return jsonify({"error": "Could not extract stream URL"}), 500
     except Exception as e:
+        print(f"❌ Stream error for {id}: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
