@@ -285,32 +285,21 @@ def stream_direct(vid_id):
             return redirect(stream_url)
         return jsonify({"error": "No stream URL"}), 500
     except Exception as e:
+        print(f"❌ stream_direct error [{vid_id}]: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/stream/<id>")
 def stream(id):
     with get_conn() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT * FROM library WHERE id=%s", (id,))
+            cur.execute("SELECT video_id FROM library WHERE id=%s", (id,))
             track = cur.fetchone()
     if not track:
         return jsonify({"error": "Track not found"}), 404
-    cached = stream_cache.get(id)
-    if cached and time.time() < cached[1]:
-        return redirect(cached[0])
-    try:
-        vid_id = track.get("video_id")
-        url = f"https://www.youtube.com/watch?v={vid_id}" if vid_id else f"{track['name']} {track['artist']} official audio"
-        info = extract_info_safe(url)
-        video = info['entries'][0] if 'entries' in info else info
-        stream_url = video.get("url")
-        if stream_url:
-            stream_cache[id] = (stream_url, time.time() + CACHE_TTL)
-            return redirect(stream_url)
-        return jsonify({"error": "Could not extract stream URL"}), 500
-    except Exception as e:
-        print(f"❌ Stream error for {id}: {e}")
-        return jsonify({"error": str(e)}), 500
+    vid_id = track.get("video_id")
+    if not vid_id:
+        return jsonify({"error": "No video ID"}), 404
+    return redirect(f"/stream_direct/{vid_id}")
 
 if __name__ == "__main__":
     app.run(port=PORT, debug=True, use_reloader=False)
