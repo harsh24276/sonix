@@ -1,4 +1,6 @@
-const API = "https://sonix-m25r.onrender.com";
+const API = location.hostname === "localhost" || location.hostname === "127.0.0.1"
+  ? `http://${location.host}`
+  : "https://sonix-m25r.onrender.com";
 
 let library = [];
 let currentTrackId = null;

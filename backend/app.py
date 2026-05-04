@@ -1,5 +1,5 @@
-import os, re, threading, time, requests
-from flask import Flask, request, jsonify, redirect, Response
+import os, re, threading, time, requests, webbrowser
+from flask import Flask, request, jsonify, redirect, Response, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 import yt_dlp
@@ -8,6 +8,8 @@ from db import get_conn, init_db
 
 load_dotenv()
 PORT = int(os.getenv("PORT", 7842))
+
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)))
 
 stream_cache = {}
 CACHE_TTL = 5.5 * 60 * 60
@@ -43,8 +45,16 @@ def clean_title(title):
 
 ytmusic = YTMusic()
 app = Flask(__name__)
-CORS(app, origins=["https://harsh24276.github.io", "http://localhost:5500", "http://127.0.0.1:5500", "null", "*"])
+CORS(app, origins=["https://harsh24276.github.io", "http://localhost:5500", "http://127.0.0.1:5500", "http://localhost:8000", "http://127.0.0.1:8000", f"http://localhost:{PORT}", f"http://127.0.0.1:{PORT}", "null", "*"])
 threading.Thread(target=init_db, daemon=True).start()
+
+@app.route("/")
+def serve_frontend():
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+@app.route("/frontend/<path:path>")
+def serve_static(path):
+    return send_from_directory(os.path.join(FRONTEND_DIR, "frontend"), path)
 
 # ── Library ──────────────────────────────────────────────
 _lib_cache = {"data": None}
@@ -275,17 +285,47 @@ def artist_songs():
 def stream_direct(vid_id):
     cached = stream_cache.get(vid_id)
     if cached and time.time() < cached[1]:
-        return redirect(cached[0])
+        yt_url = cached[0]
+    else:
+        try:
+            info = extract_info_safe(f"https://www.youtube.com/watch?v={vid_id}")
+            video = info["entries"][0] if "entries" in info else info
+            yt_url = video.get("url")
+            if not yt_url:
+                return jsonify({"error": "No stream URL"}), 500
+            stream_cache[vid_id] = (yt_url, time.time() + CACHE_TTL)
+        except Exception as e:
+            print(f"❌ stream_direct error [{vid_id}]: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    # Proxy the stream to avoid YouTube CORS blocks
     try:
-        info = extract_info_safe(f"https://www.youtube.com/watch?v={vid_id}")
-        video = info["entries"][0] if "entries" in info else info
-        stream_url = video.get("url")
-        if stream_url:
-            stream_cache[vid_id] = (stream_url, time.time() + CACHE_TTL)
-            return redirect(stream_url)
-        return jsonify({"error": "No stream URL"}), 500
+        req_headers = {
+            "User-Agent": YDL_OPTS["http_headers"]["User-Agent"],
+            "Referer": "https://www.youtube.com",
+        }
+        if "Range" in request.headers:
+            req_headers["Range"] = request.headers["Range"]
+
+        yt_resp = requests.get(yt_url, stream=True, timeout=30, headers=req_headers)
+
+        resp_headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Accept-Ranges": "bytes",
+            "Content-Type": yt_resp.headers.get("Content-Type", "audio/webm"),
+        }
+        if "Content-Length" in yt_resp.headers:
+            resp_headers["Content-Length"] = yt_resp.headers["Content-Length"]
+        if "Content-Range" in yt_resp.headers:
+            resp_headers["Content-Range"] = yt_resp.headers["Content-Range"]
+
+        return Response(
+            yt_resp.iter_content(chunk_size=8192),
+            status=yt_resp.status_code,
+            headers=resp_headers
+        )
     except Exception as e:
-        print(f"❌ stream_direct error [{vid_id}]: {e}")
+        print(f"❌ Proxy stream error [{vid_id}]: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/stream/<id>")
